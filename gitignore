@@ -1,8 +1,5 @@
-# Backups exportados pelo sistema contêm dados de clientes — não versionar
-certificados-backup_*.json
+# Backups e arquivos de configuração inicial têm dados de clientes e a assinatura — não enviar ao GitHub
 *.json
-
-# Arquivos do sistema operacional
 .DS_Store
 Thumbs.db
 desktop.ini

@@ -1,39 +1,67 @@
 # Certificados de Análise — Prometals
 
-Sistema em um único arquivo (`index.html`) para buscar, editar e imprimir os **Certificados de Qualidade** que antes eram feitos na planilha *Certificados_da_analise.xlsx*.
+Sistema para buscar, editar e imprimir os **Certificados de Qualidade**.
+Site: https://gabrielprometals.github.io/certificado-analise/
 
-Não precisa instalar nada: basta abrir o `index.html` no **Chrome** ou no **Edge**. Funciona sem internet.
+Os dados ficam no **Supabase**: todos os usuários liberados veem e editam os mesmos certificados, em tempo real. Cada pessoa entra com o próprio e-mail e senha.
 
-## O que dá para fazer
+## Arquivos
 
-| Tela | Para que serve |
+| Arquivo | O que é |
 |---|---|
-| **Busca de OP** | Digite a OP e veja em qual corrida ela está (procura em OPs/Itens, OP da liga e Referência). Também busca por corrida, material, cliente, pedido ou nº do certificado. Com um só resultado, `Enter` já abre. |
-| **Certificado** | Mesmo layout do Excel. Clique em qualquer campo e digite. Botões para **Duplicar**, **Excluir** e **Imprimir / PDF**. Opção de **incluir ou remover a análise química** e a assinatura. |
-| **Nova corrida** | Cria um certificado novo, podendo copiar cliente, pedido e produtos de outro. |
-| **Banco de dados** | Faixas mín./máx. de cada liga, usadas para conferir a análise química na tela (não sai na impressão). |
+| `index.html` | A página (estrutura das telas) |
+| `style.css` | O visual (cores, layout do certificado, impressão) |
+| `app.js` | O funcionamento (busca, edição, impressão, banco de dados) |
+| `config.js` | **URL e chave do Supabase**: único arquivo que precisa ser editado |
+| `supabase.sql` | Cria as tabelas e a segurança no Supabase (rodar uma vez) |
+| `logo.png` | Logo usada no topo e no certificado |
 
-### Atalhos
-- `/` — vai para a busca
-- `Enter` — próximo campo · `Alt` + `Enter` — quebra de linha no campo
-- Colar uma linha de valores do Excel/espectrômetro no campo **C** preenche a análise inteira
-- `Ctrl` + `P` — imprimir / salvar PDF (A4, mesmo formato da planilha)
-- `Esc` — volta para a busca
+> Os dados dos clientes e a assinatura **não ficam no GitHub**: ficam no Supabase, protegidos por login.
+> Nunca envie para o GitHub arquivos `.json` de backup ou o `configuracao-inicial.json`.
 
-## Onde ficam os dados
+## Configuração (uma vez só)
 
-As alterações são salvas **no navegador do computador** onde o arquivo foi aberto (não no arquivo e não no GitHub).
+### 1. Preparar o banco
+1. No Supabase, abra o projeto que vai guardar os certificados (pode ser um que você já usa).
+2. Abra o arquivo `supabase.sql` e, no final (passo 5), troque `pessoa1@prometals.co` e `pessoa2@prometals.co` pelos e-mails da equipe.
+3. No Supabase: **SQL Editor → New query** → cole todo o conteúdo → **Run**.
+   Isso cria três tabelas (`certificados_analise`, `certificados_config`, `certificados_usuarios`), a segurança e o tempo real. Não mexe em nenhuma outra tabela do projeto.
 
-- Para levar para outro computador ou guardar uma cópia: **Backup → Exportar backup (.json)**.
-- No outro computador: **Backup → Importar backup…** (escolha *Juntar* ou *Substituir*).
-- **Backup → Restaurar dados originais da planilha** volta ao conteúdo importado do Excel.
+### 2. Criar os usuários
+1. **Authentication → Users → Add user → Create new user**.
+2. E-mail e senha de cada pessoa. Marque **Auto Confirm User**.
+3. Use os mesmos e-mails que estão na lista do `supabase.sql`. Só quem está na lista consegue ver os certificados.
 
-> ⚠️ Os backups `.json` têm dados de clientes. O `.gitignore` deste repositório impede que sejam enviados ao GitHub por engano — guarde-os na rede interna.
+### 3. Link de "Esqueci minha senha"
+**Authentication → URL Configuration** → em **Redirect URLs**, adicione
+`https://gabrielprometals.github.io/certificado-analise/`
 
-## Privacidade
+### 4. Ligar o site ao Supabase
+1. **Project Settings → API Keys** (ou **API**).
+2. Copie a **Project URL** e a chave **anon / public** (ou **publishable**, começa com `sb_publishable_`).
+   ⚠️ Nunca use a chave **service_role** / **secret**.
+3. No GitHub, abra `config.js` → lápis (editar) → cole a URL em `url` e a chave em `anonKey` → **Commit changes**.
 
-O `index.html` contém dados de clientes, a logo e a assinatura usadas nos certificados. **Mantenha este repositório privado.** Não ative o GitHub Pages em repositório público.
+### 5. Primeiro acesso
+1. Abra o site e entre com um dos usuários.
+2. Na faixa **Primeiro acesso**, clique em **Importar arquivo…** e escolha `configuracao-inicial.json` (traz as ligas do Banco de dados e a assinatura).
+3. Pronto. Clique em **Nova corrida** para criar o primeiro certificado.
 
-## Atualizar a versão
+## Uso
 
-Substitua o `index.html` pela versão nova. Os dados já salvos no navegador continuam lá.
+- **Busca de OP**: digite a OP e veja em qual corrida ela está. Também busca por corrida, material, cliente, pedido ou nº do certificado. `Enter` abre quando há um só resultado.
+- **Certificado**: clique em qualquer campo e digite. Salva sozinho. O que você muda aparece para os outros na hora.
+- **Imprimir / PDF**: `Ctrl` + `P` ou botão no alto: A4, mesmo formato da planilha.
+- **Banco de dados**: faixas das ligas (conferência na tela) e a **assinatura** dos certificados.
+- **Backup**: exporte um `.json` de vez em quando e guarde na rede.
+- **Sem internet**: dá para continuar trabalhando com a última cópia. As alterações ficam guardadas no computador e são enviadas quando a conexão voltar.
+
+## Novo usuário
+1. **Authentication → Users → Add user** (com Auto Confirm).
+2. **Table Editor → certificados_usuarios → Insert row** → o e-mail da pessoa.
+
+Para tirar o acesso de alguém, apague o e-mail da tabela `certificados_usuarios`.
+
+## Observações
+- No plano gratuito, o Supabase pausa projetos que ficam 7 dias sem uso. Se acontecer, entre no Supabase e clique em **Restore project**.
+- As tabelas podem ser vistas e exportadas pelo **Table Editor** do Supabase. Cada certificado fica numa linha de `certificados_analise` (coluna `dados`).
